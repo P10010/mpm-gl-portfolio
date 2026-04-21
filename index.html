@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mpm-gl</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Darker+Grotesque:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080808;
+      --bg-raised: #111111;
+      --text: #c8c8c8;
+      --text-dim: #666666;
+      --text-bright: #e0e0e0;
+      --accent: #d4943a;
+      --accent-dim: rgba(212, 148, 58, 0.15);
+      --font-display: 'Darker Grotesque', sans-serif;
+      --font-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      --max-width: 1100px;
+      --spacing-xl: clamp(80px, 12vh, 140px);
+      --spacing-lg: clamp(40px, 6vh, 70px);
+      --spacing-md: 24px;
+      --spacing-sm: 12px;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scrollbar-color: var(--text-dim) var(--bg);
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-weight: 400;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(8, 8, 8, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    nav .logo {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+      color: var(--text-bright);
+    }
+
+    nav .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    nav .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.3s ease;
+    }
+
+    nav .nav-links a:hover {
+      color: var(--accent);
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    section {
+      padding-top: var(--spacing-xl);
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 80px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(56px, 10vw, 120px);
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      color: var(--text-bright);
+      line-height: 0.95;
+    }
+
+    .hero .subtitle {
+      margin-top: 24px;
+      font-size: clamp(15px, 1.8vw, 18px);
+      font-weight: 400;
+      color: var(--text-dim);
+      max-width: 580px;
+      line-height: 1.7;
+    }
+
+    .hero .subtitle span {
+      color: var(--accent);
+    }
+
+    .hero .scroll-hint {
+      margin-top: 40px;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      opacity: 0.5;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+
+    .hero-video {
+      margin-top: 40px;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+      background: var(--bg-raised);
+    }
+
+    .hero-video video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    .hero-video-label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: rgba(8, 8, 8, 0.7);
+      padding: 4px 10px;
+      border-radius: 2px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .mute-btn {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50%;
+      background: rgba(8, 8, 8, 0.6);
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      transition: border-color 0.3s ease, color 0.3s ease;
+    }
+
+    .mute-btn:hover {
+      border-color: var(--accent);
+      color: var(--text-bright);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.7; }
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: var(--spacing-md);
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .section-label span {
+      color: var(--accent);
+      margin-right: 10px;
+    }
+
+    .render-block {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .render-block .render-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .render-block .render-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text-bright);
+    }
+
+    .render-block .render-duration {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .render-track {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-bottom: var(--spacing-sm);
+    }
+ 
+    .render-track a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+ 
+    .render-track a:hover {
+      text-decoration: underline;
+    }
+
+    .video-embed {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 */
+      background: var(--bg-raised);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .video-embed iframe,
+    .video-embed video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .video-embed .placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .snippet-stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-lg);
+    }
+
+    .snippet-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .snippet-row.reverse {
+      grid-template-columns: 1fr 1.4fr;
+    }
+
+    .snippet-row.reverse .snippet-video {
+      order: 2;
+    }
+
+    .snippet-row.reverse .snippet-desc {
+      order: 1;
+    }
+
+    .snippet-video {
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+      background: var(--bg-raised);
+    }
+
+    .snippet-video video {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+    }
+
+    .snippet-desc h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text-bright);
+      margin-bottom: 10px;
+    }
+
+    .snippet-desc p {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-dim);
+      line-height: 1.75;
+    }
+
+    .tech-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+    }
+
+    .tech-block h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--text-bright);
+      letter-spacing: 0.01em;
+      margin-bottom: 12px;
+    }
+
+    .tech-block p {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-dim);
+      line-height: 1.75;
+    }
+
+    .tech-block .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .tech-block .tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 2px;
+      color: var(--text-dim);
+      background: var(--accent-dim);
+      letter-spacing: 0.02em;
+    }
+
+    .extensions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .extension-item h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+    }
+
+    .extension-item p {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-dim);
+      line-height: 1.75;
+      max-width: 680px;
+    }
+
+    .references-list p {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      margin-top: 20px;
+    }
+ 
+    .references-list p:first-child {
+      margin-top: 0;
+    }
+ 
+    .references-list ul {
+      list-style: none;
+      padding: 0;
+    }
+ 
+    .references-list li {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.7;
+      margin-bottom: 8px;
+      padding-left: 16px;
+      position: relative;
+    }
+ 
+    .references-list li::before {
+      content: "–";
+      position: absolute;
+      left: 0;
+      color: var(--text-dim);
+    }
+ 
+    .references-list em {
+      color: var(--text);
+    }
+ 
+    .references-list a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+ 
+    .references-list a:hover {
+      text-decoration: underline;
+    }
+ 
+
+
+    footer {
+      margin-top: var(--spacing-xl);
+      padding: 32px 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    footer .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer .footer-name {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    footer .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    footer .footer-links a {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.3s ease;
+    }
+
+    footer .footer-links a:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 700px) {
+      .container { padding: 0 20px; }
+      nav { padding: 16px 20px; }
+      .snippet-row,
+      .snippet-row.reverse { grid-template-columns: 1fr; }
+      .snippet-row.reverse .snippet-video { order: 1; }
+      .snippet-row.reverse .snippet-desc { order: 2; }
+      .tech-content { grid-template-columns: 1fr; gap: 32px; }
+      footer .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">mpm-gl</div>
+    <ul class="nav-links">
+      <li><a href="#details">Details</a></li>
+      <li><a href="#renders">Full Renders</a></li>
+      <li><a href="#technical">Technical</a></li>
+      <li><a href="#extensions">Extensions</a></li>
+      <li><a href="#references">References</a></li>
+      <li><a href="https://github.com/P10010/mpm-gl" target="_blank" rel="noopener">Source</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+
+    <section class="hero">
+      <h1>mpm-gl</h1>
+      <p class="subtitle">
+        Interactive fluid simulation driven by sound.
+        An <span>MPM</span> solver with an offline audio analysis pipeline
+        that extracts per-frame features from any song and maps them to
+        simulation and rendering parameters.
+      </p>
+      <div class="hero-video">
+        <div class="hero-video-label">Preview</div>
+        <video id="heroVideo" autoplay loop muted playsinline src="clips/hero-preview.mp4">
+        </video>
+        <button id="heroMute" class="mute-btn" aria-label="Unmute video">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path class="icon-muted" d="M11 5L6 9H2v6h4l5 4V5z M23 9l-6 6 M17 9l6 6"/>
+            <path class="icon-unmuted" style="display:none" d="M11 5L6 9H2v6h4l5 4V5z M15.54 8.46a5 5 0 010 7.07 M19.07 4.93a10 10 0 010 14.14"/>
+          </svg>
+        </button>
+      </div>
+      <div class="render-track">Track: <a href="https://ostgut.bandcamp.com/track/submerge" target="_blank" rel="noopener">Submerge</a></div>
+      <p class="scroll-hint">↓ scroll</p>
+    </section>
+
+    <section id="details">
+      <div class="section-label reveal"><span>01</span>Details</div>
+
+      <div class="snippet-stack">
+
+        <div class="snippet-row reveal">
+          <div class="snippet-video">
+            <video controls playsinline preload="metadata" src="clips/beat-impulse.mp4">
+            </video>
+          </div>
+          <div class="snippet-desc">
+            <h3>Beat impulse</h3>
+            <p>
+              On each beat, every particle gets a velocity kick in a
+              direction sampled uniformly from the sphere. The direction
+              changes every beat, so over time the kicks cancel out and
+              the cloud does not drift.
+            </p>
+          </div>
+        </div>
+
+        <div class="snippet-row reverse reveal">
+          <div class="snippet-video">
+              <video controls playsinline preload="metadata" src="clips/hihats-impulse.mp4">
+              </video>
+          </div>
+          <div class="snippet-desc">
+            <h3>Hi-hats</h3>
+            <p>
+              The high-frequency band (contrast-stretched) drives a 3D Perlin
+              noise velocity field sampled at each particle's position. Three
+              domain-shifted scalar noise evaluations give the x, y, z
+              components; the field is re-seeded every frame. The spatial
+              scale is low (0.5), so the perturbation is broad and smooth
+              across the cloud.
+            </p>
+          </div>
+        </div>
+
+        <div class="snippet-row reveal">
+          <div class="snippet-video">
+              <video controls playsinline preload="metadata" src="clips/trail-decay.mp4">
+              </video>
+          </div>
+          <div class="snippet-desc">
+            <h3>Trail decay</h3>
+            <p>
+              The renderer draws into a persistent FBO that is never
+              cleared. A fade pass each frame blends the previous image
+              toward the background color. Spectral flux controls how
+              much of the previous frame survives: more flux means
+              shorter trails, less flux means longer ones.
+            </p>
+          </div>
+        </div>
+
+        <div class="snippet-row reverse reveal">
+          <div class="snippet-video">
+              <video controls playsinline preload="metadata" src="clips/fluid-body.mp4">
+            </video>
+          </div>
+          <div class="snippet-desc">
+            <h3>Fluid–body interaction</h3>
+            <p>
+              Water uses a Tait equation of state; the solid body uses
+              neo-Hookean hyperelasticity. Both materials live on the
+              same MPM grid, so momentum transfer between them happens
+              through the normal P2G/G2P cycle. There is no collision
+              detection or explicit coupling code.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="renders">
+      <div class="section-label reveal"><span>02</span>Full renders</div>
+
+      <div class="render-block reveal">
+        <div class="render-meta">
+          <span class="render-title">Render I, Visualizer: Fadi Mohem - Submerge (2025)</span>
+          <span class="render-duration">[10:38]</span>
+        </div>
+        <div class="render-track">Track: <a href="https://ostgut.bandcamp.com/track/submerge" target="_blank" rel="noopener">Submerge</a></div>
+        <div class="video-embed">
+            <iframe loading="lazy" title="Gumlet video player"
+                src="https://play.gumlet.io/embed/69e704bd84837c4335e9b32a?background=false&autoplay=false&loop=true&disable_player_controls=false"
+                style="border:none; position: absolute; top: 0; left: 0; height: 100%; width: 100%;"
+                referrerpolicy="origin"
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;clipboard-write;">
+            </iframe>
+        </div>
+      </div>
+
+      <div class="render-block reveal">
+        <div class="render-meta">
+          <span class="render-title">Render II (edit), Visualizer: Barker - Reframing (2025) </span>
+          <span class="render-duration">[4:10]</span>
+        </div>
+        <div class="render-track">Track: <a href="https://sambarker.bandcamp.com/track/reframing" target="_blank" rel="noopener">Reframing</a></div>
+        <div class="video-embed">
+            <iframe loading="lazy" title="Gumlet video player"
+                src="https://play.gumlet.io/embed/69e703bd84837c4335e99ac6?background=false&autoplay=false&loop=true&disable_player_controls=false"
+                style="border:none; position: absolute; top: 0; left: 0; height: 100%; width: 100%;"
+                referrerpolicy="origin"
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;clipboard-write;">
+            </iframe>
+        </div>
+      </div>
+    </section>
+
+    <section id="technical">
+      <div class="section-label reveal"><span>03</span>Technical</div>
+
+      <div class="tech-content reveal">
+        <div class="tech-block">
+          <h3>Simulation</h3>
+          <p>
+            MLS-MPM with APIC momentum transfer and quadratic B-spline
+            weights. Water uses a Tait equation of state with isotropic
+            deformation gradient reset; the solid body uses neo-Hookean
+            hyperelasticity with a full deformation gradient. Both
+            materials share one grid, so coupling between them is
+            implicit through the P2G / update / G2P cycle. Twenty
+            substeps per frame keep the explicit integrator stable.
+          </p>
+          <div class="tag-list">
+            <span class="tag">C++17</span>
+            <span class="tag">Eigen</span>
+            <span class="tag">MLS-MPM</span>
+            <span class="tag">Tait EOS</span>
+            <span class="tag">neo-Hookean</span>
+          </div>
+        </div>
+
+        <div class="tech-block">
+          <h3>Rendering</h3>
+          <p>
+            Each particle is an instanced billboarded quad expanded in
+            view space. All particles are drawn into a persistent FBO.
+            A fade pass each frame decays the previous image; additive
+            blending on the particle pass accumulates brightness where
+            particles overlap. Each particle contributes very little
+            light on its own, so the glow you see is hundreds of them
+            stacking. Color is read from a speed-based ramp, one per
+            material.
+          </p>
+          <div class="tag-list">
+            <span class="tag">OpenGL 4.6</span>
+            <span class="tag">GLSL</span>
+            <span class="tag">FBO</span>
+            <span class="tag">instanced rendering</span>
+            <span class="tag">additive blending</span>
+          </div>
+        </div>
+
+        <div class="tech-block">
+          <h3>Audio analysis</h3>
+          <p>
+            A Python script analyses any audio file and writes one JSON
+            object per frame at 24fps. Each frame contains loudness,
+            beats, spectral change, and energy in four frequency bands
+            (sub-bass through high). Raw features tend to stay near
+            their average, so they are contrast-stretched against a
+            rolling median: most of the time they sit near zero and
+            only spike on actual changes. The C++ side loads the JSON
+            with a hand-written parser (no external dependency).
+          </p>
+          <div class="tag-list">
+            <span class="tag">Python</span>
+            <span class="tag">librosa</span>
+            <span class="tag">STFT</span>
+            <span class="tag">contrast stretching</span>
+            <span class="tag">JSON</span>
+          </div>
+        </div>
+
+        <div class="tech-block">
+          <h3>Audio to visual mapping</h3>
+          <p>
+            Beats inject velocity impulses in a random direction.
+            The high-frequency band drives Perlin noise perturbation
+            across all particles. Spectral flux shortens trail
+            persistence. Loudness scales particle size. Accumulated
+            beat energy triggers macro events: radial explosions from
+            the cloud's center of mass, or uniform pushes in a random
+            direction, with a cooldown to prevent them from firing
+            back to back.
+          </p>
+          <div class="tag-list">
+            <span class="tag">beat impulses</span>
+            <span class="tag">Perlin noise kicks</span>
+            <span class="tag">trail modulation</span>
+            <span class="tag">macro events</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="extensions">
+      <div class="section-label reveal"><span>04</span>Extensions I would love to work on</div>
+
+      <div class="extensions-list reveal">
+
+        <div class="extension-item">
+          <h3>Real-time audio analysis</h3>
+          <p>
+            The audio pipeline currently runs offline: a Python script
+            writes per-frame features to JSON before the simulation
+            starts. Replacing this with a real-time FFT on a live audio
+            input would let the system run from a microphone or line-in,
+            with no pre-processing step.
+          </p>
+        </div>
+
+        <div class="extension-item">
+          <h3>Additional materials</h3>
+          <p>
+            The MPM framework supports arbitrary constitutive models
+            through the stress computation in P2G. Cloth (thin shells,
+            XPBD membranes) or granular media (sand, snow) would look
+            completely different but use the same grid and renderer.
+          </p>
+        </div>
+
+        <div class="extension-item">
+          <h3>Interactive parameter tuning</h3>
+          <p>
+            All audio-to-visual weights are currently loaded from a
+            configuration file. An artist-facing interface with sliders
+            and immediate visual feedback would make the system much
+            more usable.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="references">
+      <div class="section-label reveal"><span>05</span>References</div>
+ 
+      <div class="references-list reveal">
+        <p>The simulation is based on:</p>
+        <ul>
+          <li>Yuanming Hu, Yu Fang, Ziheng Ge, Ziyin Qu, Yixin Zhu, Andre Pradhana, and Chenfanfu Jiang. <em>A Moving Least Squares Material Point Method with Displacement Discontinuity and Two-Way Rigid Body Coupling.</em> ACM Trans. Graph. (SIGGRAPH), 2018. <a href="https://dl.acm.org/doi/10.1145/3197517.3201293" target="_blank" rel="noopener">doi:10.1145/3197517.3201293</a></li>
+          <li>Chenfanfu Jiang, Craig Schroeder, Joseph Teran, Alexey Stomakhin, and Andrew Selle. <em>The Material Point Method for Simulating Continuum Materials.</em> SIGGRAPH Course, 2016. <a href="https://dl.acm.org/doi/10.1145/2897826.2927348" target="_blank" rel="noopener">doi:10.1145/2897826.2927348</a></li>
+          <li>Markus Becker, Matthias Teschner. <em>Weakly Compressible SPH for Free Surface Flows.</em> SCA, 2007. <a href="https://cg.informatik.uni-freiburg.de/publications/2007_SCA_SPH.pdf" target="_blank" rel="noopener">PDF</a></li>
+        </ul>
+        <p>The Perlin noise implementation is based on:</p>
+        <ul>
+          <li>Ken Perlin. <em>Improving Noise.</em> ACM Trans. Graph. (SIGGRAPH), 2002. <a href="https://dl.acm.org/doi/abs/10.1145/566570.566636" target="_blank" rel="noopener">doi:10.1145/566570.566636</a> (<a href="https://cs.nyu.edu/~perlin/noise/" target="_blank" rel="noopener">reference implementation</a>)</li>
+        </ul>
+      </div>
+    </section>
+ 
+
+    <footer>
+      <div class="footer-inner">
+        <span class="footer-name">© 2026 P10010 (/ PRC)</span>
+        <ul class="footer-links">
+          <li><a href="https://github.com/P10010/mpm-gl" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="mailto:job.pr@pm.me">Contact</a></li>
+        </ul>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Scroll-triggered fade-in
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Hero preview mute/unmute toggle
+    const heroVideo = document.getElementById('heroVideo');
+    const muteBtn   = document.getElementById('heroMute');
+    if (heroVideo && muteBtn) {
+      const iconMuted   = muteBtn.querySelector('.icon-muted');
+      const iconUnmuted = muteBtn.querySelector('.icon-unmuted');
+
+      muteBtn.addEventListener('click', () => {
+        heroVideo.muted = !heroVideo.muted;
+        if (heroVideo.muted) {
+          iconMuted.style.display = '';
+          iconUnmuted.style.display = 'none';
+          muteBtn.setAttribute('aria-label', 'Unmute video');
+        } else {
+          iconMuted.style.display = 'none';
+          iconUnmuted.style.display = '';
+          muteBtn.setAttribute('aria-label', 'Mute video');
+        }
+      });
+    }
+
+    // Only one video plays at a time.
+    // When any video starts, pause all others (including the hero).
+    const allVideos = document.querySelectorAll('video');
+    allVideos.forEach(video => {
+      video.addEventListener('play', () => {
+        allVideos.forEach(other => {
+          if (other !== video) other.pause();
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
