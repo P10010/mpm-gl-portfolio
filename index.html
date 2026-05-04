@@ -319,63 +319,6 @@
     </footer>
 
   </div>
-
-  <script>
-    // Scroll-triggered fade-in
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, { threshold: 0.12 });
-
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-    // Hero preview mute/unmute toggle
-    const heroVideo = document.getElementById('heroVideo');
-    const muteBtn   = document.getElementById('heroMute');
-    if (heroVideo && muteBtn) {
-      const iconMuted   = muteBtn.querySelector('.icon-muted');
-      const iconUnmuted = muteBtn.querySelector('.icon-unmuted');
-
-      muteBtn.addEventListener('click', () => {
-        heroVideo.muted = !heroVideo.muted;
-        if (heroVideo.muted) {
-          iconMuted.style.display = '';
-          iconUnmuted.style.display = 'none';
-          muteBtn.setAttribute('aria-label', 'Unmute video');
-        } else {
-          iconMuted.style.display = 'none';
-          iconUnmuted.style.display = '';
-          muteBtn.setAttribute('aria-label', 'Mute video');
-        }
-      });
-    }
-
-    // Only one video plays at a time.
-    // When any video starts, pause all others (including the hero).
-    const allVideos = document.querySelectorAll('video');
-    allVideos.forEach(video => {
-      video.addEventListener('play', () => {
-        allVideos.forEach(other => {
-          if (other !== video) other.pause();
-        });
-      });
-    });
-
-    // Mobile nav toggle
-    const navToggle = document.querySelector('.nav-toggle');
-    const navLinks  = document.querySelector('.nav-links');
-    navToggle.addEventListener('click', () => {
-      navLinks.classList.toggle('open');
-    });
-    navLinks.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        navLinks.classList.remove('open');
-      });
-    });
-  </script>
-
+  <script src="main.js"></script>
 </body>
 </html>
